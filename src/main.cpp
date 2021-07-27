@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <deque>
 #include <cmath>
+#include <string>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -35,7 +36,7 @@ std::deque<EnemyBullet> gEnemyBullets;
 
 bool gQuit;
 bool load = init();
-bool gMainMenu;sasdsa
+bool gMainMenu;
 
 Player gPlayer(gTextures["player-ship"]);
 
@@ -113,69 +114,83 @@ int main()
 
         if (!gMainMenu)
         {
-            if (KeyboardHandler::isPressed(SDLK_a))
+            if (gPlayer.getLives() == 0)
             {
-                gPlayer.moveLeft();
+                gWindow.clear();
+                gWindow.renderCenter(Vector2f(0, std::sin(SDL_GetTicks()/100)), "You died!", gFonts["32"], gColors["red"]);
+                gWindow.display();
             }
 
-            if (KeyboardHandler::isPressed(SDLK_d))
+            if (gPlayer.getLives() > 0)
             {
-                gPlayer.moveRight();
-            }
-
-            if (KeyboardHandler::isPressed(SDLK_SPACE))
-            {
-                gPlayer.fire(gTextures["bullet"], gPlayerBullets, gSfx["pew"]);
-            }
-
-            for(Enemy &e: gEnemies)
-            {
-                e.update();
-
-                if (rand() % 119147 < 500 && e.isAlive())
+                if (KeyboardHandler::isPressed(SDLK_a))
                 {
-                    e.fire(gTextures["bullet-180"], gEnemyBullets);
+                    gPlayer.moveLeft();
                 }
-            }
 
-            for(PlayerBullet &b: gPlayerBullets)
-            {
-                b.update(gPlayerBullets, gEnemies, gSfx["bam"]);
-            }
-
-            for(EnemyBullet &b: gEnemyBullets)
-            {
-                b.update(gEnemyBullets, gPlayer);
-            }
-
-            gWindow.clear();
-
-            for(PlayerBullet &b: gPlayerBullets)
-            {
-                if (!b.getHit())
+                if (KeyboardHandler::isPressed(SDLK_d))
                 {
-                    gWindow.render(b);
+                    gPlayer.moveRight();
                 }
-            }
 
-            for(EnemyBullet &b: gEnemyBullets)
-            {
-                if (!b.getHit())
+                if (KeyboardHandler::isPressed(SDLK_SPACE))
                 {
-                    gWindow.render(b);
+                    gPlayer.fire(gTextures["bullet"], gPlayerBullets, gSfx["pew"]);
                 }
-            }
 
-            gWindow.render(gPlayer);
-
-            for(Enemy &e: gEnemies)
-            {
-                if (e.isAlive())
+                for(Enemy &e: gEnemies)
                 {
-                    gWindow.render(e);
+                    e.update();
+
+                    if (rand() % 119147 < 500 && e.isAlive())
+                    {
+                        e.fire(gTextures["bullet-180"], gEnemyBullets);
+                    }
                 }
+
+                for(PlayerBullet &b: gPlayerBullets)
+                {
+                    b.update(gPlayerBullets, gEnemies, gSfx["bam"]);
+                }
+
+                for(EnemyBullet &b: gEnemyBullets)
+                {
+                    b.update(gEnemyBullets, gPlayer);
+                }
+
+                gWindow.clear();
+
+                gWindow.render(Vector2f(0, 20), "Lives: ", gFonts["16"], gColors["black"]);
+                gWindow.render(Vector2f(50, 20), std::to_string(gPlayer.getLives()).c_str(), gFonts["16"], gColors["white"]);
+
+
+                for(PlayerBullet &b: gPlayerBullets)
+                {
+                    if (!b.getHit())
+                    {
+                        gWindow.render(b);
+                    }
+                }
+
+                for(EnemyBullet &b: gEnemyBullets)
+                {
+                    if (!b.getHit())
+                    {
+                        gWindow.render(b);
+                    }
+                }
+
+                gWindow.render(gPlayer);
+
+                for(Enemy &e: gEnemies)
+                {
+                    if (e.isAlive())
+                    {
+                        gWindow.render(e);
+                    }
+                }
+                gWindow.display();
             }
-            gWindow.display();
         }
 
 
@@ -236,11 +251,13 @@ bool init()
 
     gColors["white"] = {255, 255, 255};
     gColors["black"] = {0, 0, 0};
+    gColors["red"] = {128, 0, 0};
 
     gFonts["32"] = TTF_OpenFont("res/fonts/cocogoose.ttf", 32);
 	gFonts["32-outline"] = TTF_OpenFont("res/fonts/cocogoose.ttf", 32);
 	gFonts["24"] = TTF_OpenFont("res/fonts/cocogoose.ttf", 24);
 	gFonts["16"] = TTF_OpenFont("res/fonts/cocogoose.ttf", 16);
+	gFonts["8"] = TTF_OpenFont("res/fonts/cocogoose.ttf", 8);
     TTF_SetFontOutline(gFonts["32-outline"], 3); 
 
     Mix_PlayChannel(-1, gSfx["peepoo"], 0);
