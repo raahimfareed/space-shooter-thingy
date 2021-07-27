@@ -5,10 +5,12 @@
 #include <ctime>
 #include <cstdlib>
 #include <deque>
+#include <cmath>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_ttf.h>
 
 #include "Config.hpp"
 #include "Utils.hpp"
@@ -25,12 +27,15 @@ RenderWindow gWindow;
 
 std::map<const char*, SDL_Texture*> gTextures;
 std::map<const char*, Mix_Chunk*> gSfx;
+std::map<const char*, SDL_Color> gColors;
+std::map<const char*, TTF_Font*> gFonts;
 std::vector<Enemy> gEnemies;
 std::deque<PlayerBullet> gPlayerBullets;
 std::deque<EnemyBullet> gEnemyBullets;
 
 bool gQuit;
 bool load = init();
+bool gMainMenu;
 
 Player gPlayer(gTextures["player-ship"]);
 
@@ -84,70 +89,95 @@ int main()
             gQuit = true;
         }
 
-        if (KeyboardHandler::isPressed(SDLK_a))
+        if (gMainMenu)
         {
-            gPlayer.moveLeft();
-        }
-
-        if (KeyboardHandler::isPressed(SDLK_d))
-        {
-            gPlayer.moveRight();
-        }
-
-        if (KeyboardHandler::isPressed(SDLK_SPACE))
-        {
-            gPlayer.fire(gTextures["bullet"], gPlayerBullets, gSfx["jump"]);
-        }
-
-        for(Enemy &e: gEnemies)
-        {
-            e.update();
-
-            if (rand() % 119147 < 500 && e.isAlive())
+            if (SDL_GetTicks() < 2500)
             {
-                e.fire(gTextures["bullet-180"], gEnemyBullets);
+                gWindow.clear();
+                gWindow.renderCenter(Vector2f(0, std::sin(SDL_GetTicks()/100)), "TEH GAYM", gFonts["24"], gColors["white"]);
+                gWindow.display();
+            }
+            else
+            {
+                gWindow.clear();
+                gWindow.renderCenter(Vector2f(0, std::sin(SDL_GetTicks()/100)), "Press Return to Start", gFonts["16"], gColors["white"]);
+                gWindow.display();
+
+                if (KeyboardHandler::isPressed(SDLK_RETURN))
+                {
+                    gMainMenu = false;
+                }
             }
         }
 
-        for(PlayerBullet &b: gPlayerBullets)
-        {
-            b.update(gPlayerBullets, gEnemies, gSfx["hit"]);
-        }
 
-        for(EnemyBullet &b: gEnemyBullets)
+        if (!gMainMenu)
         {
-            b.update(gEnemyBullets, gPlayer);
-        }
-
-        gWindow.clear();
-
-        for(PlayerBullet &b: gPlayerBullets)
-        {
-            if (!b.getHit())
+            if (KeyboardHandler::isPressed(SDLK_a))
             {
-                gWindow.render(b);
+                gPlayer.moveLeft();
             }
-        }
 
-        for(EnemyBullet &b: gEnemyBullets)
-        {
-            if (!b.getHit())
+            if (KeyboardHandler::isPressed(SDLK_d))
             {
-                gWindow.render(b);
+                gPlayer.moveRight();
             }
-        }
 
-        gWindow.render(gPlayer);
-
-        for(Enemy &e: gEnemies)
-        {
-            if (e.isAlive())
+            if (KeyboardHandler::isPressed(SDLK_SPACE))
             {
-                gWindow.render(e);
+                gPlayer.fire(gTextures["bullet"], gPlayerBullets, gSfx["pew"]);
             }
+
+            for(Enemy &e: gEnemies)
+            {
+                e.update();
+
+                if (rand() % 119147 < 500 && e.isAlive())
+                {
+                    e.fire(gTextures["bullet-180"], gEnemyBullets);
+                }
+            }
+
+            for(PlayerBullet &b: gPlayerBullets)
+            {
+                b.update(gPlayerBullets, gEnemies, gSfx["bam"]);
+            }
+
+            for(EnemyBullet &b: gEnemyBullets)
+            {
+                b.update(gEnemyBullets, gPlayer);
+            }
+
+            gWindow.clear();
+
+            for(PlayerBullet &b: gPlayerBullets)
+            {
+                if (!b.getHit())
+                {
+                    gWindow.render(b);
+                }
+            }
+
+            for(EnemyBullet &b: gEnemyBullets)
+            {
+                if (!b.getHit())
+                {
+                    gWindow.render(b);
+                }
+            }
+
+            gWindow.render(gPlayer);
+
+            for(Enemy &e: gEnemies)
+            {
+                if (e.isAlive())
+                {
+                    gWindow.render(e);
+                }
+            }
+            gWindow.display();
         }
 
-        gWindow.display();
 
         int frameTicks = SDL_GetTicks() - startTicks;
         if (frameTicks < 1000 / gWindow.getRefreshRate())
@@ -157,6 +187,7 @@ int main()
     }
 
     gWindow.cleanUp();
+    TTF_Quit();
     SDL_Quit();
 
     return 0;
@@ -176,6 +207,11 @@ bool init()
         return false;
     }
 
+    if (TTF_Init() == -1)
+    {
+        printf("TTF_Init() Failed. Error: %s\n", SDL_GetError());
+    }
+
     Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
 
     gWindow.create("TEH GAYM", WIDTH, HEIGHT);
@@ -185,6 +221,7 @@ bool init()
     gTextures["bullet-180"] = gWindow.pLoadTexture("res/textures/bullets/bullet-180.png");
 
     gQuit = false;
+    gMainMenu = true;
 
     srand((unsigned)time(0));
 
@@ -193,12 +230,20 @@ bool init()
     gEnemies.push_back(Enemy(gEnemies, gTextures["enemy-ufo"]));
     gEnemies.push_back(Enemy(gEnemies, gTextures["enemy-ufo"]));
 
-    gSfx["jump"] = Mix_LoadWAV("res/sounds/jump.wav");
-    gSfx["fall"] = Mix_LoadWAV("res/sounds/fall.wav");
-    gSfx["click"] = Mix_LoadWAV("res/sounds/click.wav");
-    gSfx["hit"] = Mix_LoadWAV("res/sounds/hit.wav");
+    gSfx["pew"] = Mix_LoadWAV("res/sounds/pew.wav");
+    gSfx["peepoo"] = Mix_LoadWAV("res/sounds/peepoo.wav");
+    gSfx["bam"] = Mix_LoadWAV("res/sounds/bam.wav");
 
-    Mix_PlayChannel(-1, gSfx["click"], 0);
+    gColors["white"] = {255, 255, 255};
+    gColors["black"] = {0, 0, 0};
+
+    gFonts["32"] = TTF_OpenFont("res/fonts/cocogoose.ttf", 32);
+	gFonts["32-outline"] = TTF_OpenFont("res/fonts/cocogoose.ttf", 32);
+	gFonts["24"] = TTF_OpenFont("res/fonts/cocogoose.ttf", 24);
+	gFonts["16"] = TTF_OpenFont("res/fonts/cocogoose.ttf", 16);
+    TTF_SetFontOutline(gFonts["32-outline"], 3); 
+
+    Mix_PlayChannel(-1, gSfx["peepoo"], 0);
 
     return true;
 }

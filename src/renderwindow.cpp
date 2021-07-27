@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+#include "Config.hpp"
 #include "RenderWindow.hpp"
 #include "Entity.hpp"
 
@@ -44,6 +45,7 @@ SDL_Texture* RenderWindow::pLoadTexture(const char* pTexturePath)
 
 void RenderWindow::clear()
 {
+    SDL_SetRenderDrawColor(mpRenderer, 90, 90, 90, 255);
     SDL_RenderClear(mpRenderer);
 }
 
@@ -79,6 +81,27 @@ void RenderWindow::render(Entity &rEntity)
     destination.h = rEntity.getCurrentFrame().h;
 
     SDL_RenderCopy(mpRenderer, rEntity.prGetTexture(), &source, &destination);
+}
+
+void RenderWindow::renderCenter(Vector2f position, const char* pText, TTF_Font* pFont, SDL_Color color)
+{
+    SDL_Surface* pSurfaceMessage = TTF_RenderText_Blended(pFont, pText, color);
+    SDL_Texture* pMessage = SDL_CreateTextureFromSurface(mpRenderer,  pSurfaceMessage);
+
+    SDL_Rect source;
+    source.x = 0;
+    source.y = 0;
+    source.w = pSurfaceMessage->w;
+    source.h = pSurfaceMessage->h;
+
+    SDL_Rect destination;
+    destination.x = WIDTH/2 - source.w/2 + position.mX;
+    destination.y = HEIGHT/2 - source.h/2 + position.mY;
+    destination.w = source.w;
+    destination.h = source.h;
+
+    SDL_RenderCopy(mpRenderer, pMessage, &source, &destination);
+    SDL_FreeSurface(pSurfaceMessage);
 }
 
 void RenderWindow::display()
