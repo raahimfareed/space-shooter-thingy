@@ -26,4 +26,4 @@ g++ -c src/*.cpp -std=c++20 -m64 -g -Wall -I include && g++ *.o -o bin/debug/mai
 ```
 Compiled file will be located in `./bin/debug`, you will need to copy `./res` folder to `./bin/debug` folder. (On windows you will also need to copy SDL2 DLLs to `./bin/debug` folder)
 ### Credits
-Used wav files from [PolyMarsDev Cursor Custodian](https://github.com/PolyMarsDev/Cursor-Custodian)
+Used cocogoose.ttf from [PolyMarsDev Cursor Custodian](https://github.com/PolyMarsDev/Cursor-Custodian)
