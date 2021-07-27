@@ -5,7 +5,6 @@
 
 #include "Entity.hpp"
 
-//
 class RenderWindow
 {
 public:
