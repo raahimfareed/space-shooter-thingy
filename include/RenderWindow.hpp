@@ -15,6 +15,7 @@ public:
     void clear();
     void render(SDL_Texture* pTexture, int dstX = 0, int dstY = 0, int srcX = 0, int srcY = 0);
     void render(Entity &rEntity);
+    void render(Vector2f position, const char* pText, TTF_Font* pFont, SDL_Color color);
     void renderCenter(Vector2f position, const char* pText, TTF_Font* pFont, SDL_Color color);
     void display();
     void cleanUp();

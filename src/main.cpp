@@ -35,7 +35,7 @@ std::deque<EnemyBullet> gEnemyBullets;
 
 bool gQuit;
 bool load = init();
-bool gMainMenu;
+bool gMainMenu;sasdsa
 
 Player gPlayer(gTextures["player-ship"]);
 
