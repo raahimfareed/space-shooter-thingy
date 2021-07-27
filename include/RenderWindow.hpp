@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 #include "Entity.hpp"
 
@@ -14,6 +15,7 @@ public:
     void clear();
     void render(SDL_Texture* pTexture, int dstX = 0, int dstY = 0, int srcX = 0, int srcY = 0);
     void render(Entity &rEntity);
+    void renderCenter(Vector2f position, const char* pText, TTF_Font* pFont, SDL_Color color);
     void display();
     void cleanUp();
     SDL_Window* pGetWindow();
